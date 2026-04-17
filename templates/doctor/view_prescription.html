@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}{{ gettext('View Prescription') }} - AI-Powered Medic{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    
+    <!-- Prescription Card -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden" id="prescriptionCard">
+        
+<!-- Header: Clinic Name & Doctor -->
+<!-- Header: Clinic Name, Logo, Date, Prescription Number -->
+<div class="border-b border-gray-200 p-4">
+    
+    <!-- Clinic Name (Centered) -->
+    <div class="text-center mb-3">
+        <h1 class="text-xl font-bold text-blue-800">
+            {% if doctor and doctor.clinic_name %}
+                {{ doctor.clinic_name }}
+            {% else %}
+                Cabinet Médical
+            {% endif %}
+        </h1>
+    </div>
+    
+    <!-- Row: Doctor Name (Left) | Logo (Center) | Date & Prescription No (Right) -->
+    <div class="flex justify-between items-center">
+        <!-- Left: Doctor Name -->
+        <div class="text-left w-1/3">
+            <p class="font-semibold text-gray-800 text-sm">
+                Dr. {{ doctor.name if doctor else current_user.name }}
+            </p>
+            {% if doctor and doctor.specialty %}
+            <p class="text-xs text-gray-500">
+                {{ doctor.specialty.name_fr if doctor.specialty else 'Consultant' }}
+            </p>
+            {% endif %}
+        </div>
+        
+        <!-- Center: Logo -->
+        <div class="text-center">
+            {% if doctor and doctor.clinic_logo %}
+            <img src="{{ url_for('static', filename=doctor.clinic_logo) }}" 
+                alt="Clinic Logo" 
+                class="w-14 h-14 object-cover rounded-full mx-auto">
+            {% else %}
+            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <i class="fas fa-stethoscope text-2xl text-blue-600"></i>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right: Date & Prescription Number -->
+        <div class="text-right w-1/3">
+            <p class="text-xs text-gray-500">
+                <span class="font-semibold">{{ gettext('Date') }}:</span> {{ prescription.created_at.strftime('%d/%m/%Y') }}
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+                <span class="font-semibold">{{ gettext('Prescription No') }}:</span> #{{ prescription.id }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Information -->
+<div class="p-3 bg-gray-50 border-b border-gray-200">
+    <div class="flex flex-wrap gap-6">
+        <div>
+            <p class="text-xs text-gray-400 uppercase">{{ gettext('Patient Name') }}</p>
+            <p class="font-semibold text-gray-800 text-sm">{{ patient.name }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 uppercase">{{ gettext('Age') }}</p>
+            <p class="font-semibold text-gray-800 text-sm">{{ patient.age if patient.age else '--' }} {{ gettext('years') }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 uppercase">{{ gettext('Weight') }}</p>
+            <p class="font-semibold text-gray-800 text-sm">-- {{ gettext('kg') }}</p>
+        </div>
+    </div>
+</div>
+
+        
+        <!-- Two Columns: 1/3 (Services + Doctor + Clinic) | 2/3 (Medications Table) -->
+        <div class="flex flex-col md:flex-row">
+            
+            <!-- RIGHT COLUMN (1/3) - Our Services + Doctor Info + Clinic Info -->
+            <div class="w-full md:w-1/3 p-4 bg-gray-50 order-first md:order-none">
+                
+                <!-- Our Services -->
+                <div class="mb-5">
+                    <h3 class="font-semibold text-gray-800 mb-2 text-sm flex items-center border-b border-gray-300 pb-1">
+                        <i class="fas fa-list-ul text-blue-600 mr-1 text-xs"></i>{{ gettext('Our Services') }}
+                    </h3>
+                    <ul class="space-y-1">
+                        <li class="text-xs text-gray-600 flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-1 text-xs mt-0.5"></i>
+                            {{ gettext('General Medical Consultations') }}
+                        </li>
+                        <li class="text-xs text-gray-600 flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-1 text-xs mt-0.5"></i>
+                            {{ gettext('Internal Medicine Examinations') }}
+                        </li>
+                        <li class="text-xs text-gray-600 flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-1 text-xs mt-0.5"></i>
+                            {{ gettext('Blood & Urine Analysis') }}
+                        </li>
+                        <li class="text-xs text-gray-600 flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-1 text-xs mt-0.5"></i>
+                            {{ gettext('ECG (Electrocardiogram)') }}
+                        </li>
+                        <li class="text-xs text-gray-600 flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-1 text-xs mt-0.5"></i>
+                            {{ gettext('Pregnancy Follow-up Clinic') }}
+                        </li>
+                        <li class="text-xs text-gray-600 flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-1 text-xs mt-0.5"></i>
+                            {{ gettext('Specialized Consultations') }}
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Doctor Information -->
+                <div class="mb-5">
+                    <h3 class="font-semibold text-gray-800 mb-2 text-sm flex items-center border-b border-gray-300 pb-1">
+                        <i class="fas fa-user-md text-blue-600 mr-1 text-xs"></i>{{ gettext('Doctor Information') }}
+                    </h3>
+                    <div class="space-y-1">
+                        <p class="text-xs text-gray-700">
+                            <i class="fas fa-user text-blue-500 w-4 text-xs"></i> Dr. {{ doctor.name if doctor else current_user.name }}
+                        </p>
+                        {% if doctor and doctor.phone %}
+                        <p class="text-xs text-gray-700">
+                            <i class="fas fa-phone-alt text-blue-500 w-4 text-xs"></i> {{ doctor.phone }}
+                        </p>
+                        {% endif %}
+                        {% if doctor and doctor.email %}
+                        <p class="text-xs text-gray-700">
+                            <i class="fas fa-envelope text-blue-500 w-4 text-xs"></i> {{ doctor.email }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Clinic Information -->
+                <div class="mb-4">
+                    <h3 class="font-semibold text-gray-800 mb-2 text-sm flex items-center border-b border-gray-300 pb-1">
+                        <i class="fas fa-hospital text-blue-600 mr-1 text-xs"></i>{{ gettext('Clinic Information') }}
+                    </h3>
+                    <div class="space-y-1">
+                        <p class="text-xs text-gray-700">
+                            <i class="fas fa-map-marker-alt text-blue-500 w-4 text-xs"></i> 
+                            {% if doctor and doctor.clinic_address %}
+                                {{ doctor.clinic_address }}
+                            {% else %}
+                                {{ gettext('Health Street, City') }}
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-700">
+                            <i class="fas fa-phone-alt text-blue-500 w-4 text-xs"></i> 
+                            {% if doctor and doctor.clinic_phone %}
+                                {{ doctor.clinic_phone }}
+                            {% else %}
+                                +213 00 00 00 00
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-700">
+                            <i class="fas fa-globe text-blue-500 w-4 text-xs"></i> 
+                            {% if doctor and doctor.clinic_email %}
+                                {{ doctor.clinic_email }}
+                            {% else %}
+                                www.medical-clinic.com
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- LEFT COLUMN (2/3) - Medications Table -->
+            <div class="w-full md:w-2/3 p-4">
+                <div class="flex items-center mb-3">
+                    <i class="fas fa-prescription-bottle text-blue-600 text-lg mr-2"></i>
+                    <h3 class="text-md font-semibold text-gray-800">R</h3>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-600 w-2/5">{{ gettext('Medication') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-600 w-3/5">{{ gettext('Dosage & Instructions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in prescription.items %}
+                            <tr class="border-b border-gray-100">
+                                <td class="px-2 py-2 text-gray-800 font-medium text-xs">
+                                    {{ item.medicine.commercial_name if item.medicine else '-' }}
+                                    <div class="text-xs text-gray-400">{{ item.medicine.scientific_name if item.medicine else '' }}</div>
+                                </td>
+                                <td class="px-2 py-2 text-gray-600 text-xs">
+                                    {{ item.dosage or '-' }}
+                                    {% if item.frequency %}
+                                    <div class="text-xs text-gray-500">{{ item.frequency }}</div>
+                                    {% endif %}
+                                    {% if item.instructions %}
+                                    <div class="text-xs text-gray-500 mt-1">{{ item.instructions }}</div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="2" class="px-2 py-6 text-center text-gray-400 text-xs">
+                                    {{ gettext('No medications in this prescription') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Diagnosis & Notes -->
+                {% if prescription.diagnosis or prescription.notes %}
+                <div class="mt-4 pt-3 border-t border-gray-200">
+                    {% if prescription.diagnosis %}
+                    <p class="text-xs text-gray-700"><span class="font-semibold">{{ gettext('Diagnosis') }}:</span> {{ prescription.diagnosis }}</p>
+                    {% endif %}
+                    {% if prescription.notes %}
+                    <p class="text-xs text-gray-700 mt-1"><span class="font-semibold">{{ gettext('Notes') }}:</span> {{ prescription.notes }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Professional Note for Pharmacist/Doctor (Footer) -->
+        <div class="p-3 bg-yellow-50 border-t border-yellow-200 text-center">
+            <p class="text-xs text-yellow-800">
+                <i class="fas fa-exclamation-triangle mr-1 text-xs"></i>
+                {{ gettext('Dear pharmacist or doctor, for any questions or errors in this prescription, please contact the clinic.') }}
+            </p>
+        </div>
+        
+        <!-- Doctor Signature & Clinic Stamp -->
+        <div class="p-3 border-t border-gray-200 bg-gray-50">
+            <div class="flex justify-between items-end">
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 mb-1">{{ gettext("Doctor's Signature") }}</p>
+                    <div class="w-32 border-b border-gray-400 pt-4"></div>
+                    <p class="text-xs text-gray-400 mt-1">Dr. {{ doctor.name if doctor else current_user.name }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 mb-1">{{ gettext("Clinic Stamp") }}</p>
+                    <div class="w-20 h-10 border border-dashed border-gray-400 rounded flex items-center justify-center">
+                        <i class="fas fa-stamp text-lg text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex justify-center gap-4 mt-6 no-print">
+    <a href="{{ url_for('prescription.print_prescription', prescription_id=prescription.id) }}" 
+       target="_blank" 
+       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+        <i class="fas fa-print mr-2"></i>{{ gettext('Print') }}
+    </a>
+    <a href="{{ url_for('doctor.patient_reports', patient_id=patient.id) }}" 
+       class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition text-sm">
+        <i class="fas fa-arrow-left mr-2"></i>{{ gettext('Back') }}
+    </a>
+</div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: 21cm 14.8cm;
+            margin: 0.4cm;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+        
+        body {
+            background: white;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #prescriptionCard {
+            box-shadow: none;
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1 { font-size: 14px !important; }
+        h2 { font-size: 12px !important; }
+        h3 { font-size: 10px !important; }
+        p, li, td, th, span, div { font-size: 8px !important; }
+        
+        .bg-yellow-50 {
+            background-color: #fefce8 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .bg-gray-50 {
+            background-color: #f9fafb !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .p-4 { padding: 0.3rem !important; }
+        .p-3 { padding: 0.2rem !important; }
+        .p-2 { padding: 0.15rem !important; }
+        .mb-4 { margin-bottom: 0.2rem !important; }
+        .mb-5 { margin-bottom: 0.25rem !important; }
+        
+        table {
+            page-break-inside: avoid;
+        }
+        tr {
+            page-break-inside: avoid;
+        }
+    }
+    
+</style>
+{% endblock %}
